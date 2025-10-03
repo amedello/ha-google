@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Assistant Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --bg-color: #020617; /* slate-950 */
+            --card-bg-color: rgba(15, 23, 42, 0.8); /* slate-900 */
+            --border-color: rgba(51, 65, 85, 0.5);
+            --accent-color: #38bdf8; /* light-blue-400 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 2rem 2rem;
+            color: #e2e8f0; /* slate-200 */
+        }
+        .view {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .view.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .main-card {
+            background-color: var(--card-bg-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem; /* rounded-3xl */
+            transition: all 0.3s ease-in-out;
+        }
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        .nav-item.active, .nav-item:hover {
+            background-color: #1e293b; /* slate-800 */
+            color: var(--accent-color);
+        }
+        .nav-item.active {
+             box-shadow: inset 3px 0 0 0 var(--accent-color);
+        }
+        .room-tab {
+            transition: all 0.2s ease;
+        }
+        .room-tab.active {
+            background-color: var(--accent-color);
+            color: #020617;
+        }
+        .status-dot {
+            height: 8px; width: 8px; border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        /* Toggle Switch */
+        .toggle-switch{position:relative;display:inline-block;width:52px;height:28px}.toggle-switch input{opacity:0;width:0;height:0}.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#334155;transition:.4s;border-radius:28px}.slider:before{position:absolute;content:"";height:20px;width:20px;left:4px;bottom:4px;background-color:white;transition:.4s;border-radius:50%}input:checked+.slider{background-color:var(--accent-color)}input:checked+.slider:before{transform:translateX(24px)}
+    </style>
+</head>
+<body class="overflow-hidden">
+
+    <div class="flex h-screen">
+        <!-- Barra di navigazione laterale -->
+        <aside class="w-24 bg-slate-900/80 p-4 flex flex-col items-center justify-between border-r border-slate-800">
+            <div>
+                <div class="p-3 bg-sky-500 rounded-xl mb-10">
+                    <i data-lucide="home" class="w-8 h-8 text-white"></i>
+                </div>
+                <nav id="main-nav" class="space-y-4 text-slate-400">
+                    <a href="#" class="nav-item active flex flex-col items-center p-3 rounded-lg" data-view="panoramica">
+                        <i data-lucide="layout-dashboard" class="w-7 h-7"></i>
+                        <span class="text-xs mt-1">Home</span>
+                    </a>
+                    <a href="#" class="nav-item flex flex-col items-center p-3 rounded-lg" data-view="stanze">
+                        <i data-lucide="sofa" class="w-7 h-7"></i>
+                        <span class="text-xs mt-1">Stanze</span>
+                    </a>
+                    <a href="#" class="nav-item flex flex-col items-center p-3 rounded-lg" data-view="media">
+                        <i data-lucide="play-circle" class="w-7 h-7"></i>
+                        <span class="text-xs mt-1">Media</span>
+                    </a>
+                    <a href="#" class="nav-item flex flex-col items-center p-3 rounded-lg" data-view="telecamere">
+                        <i data-lucide="video" class="w-7 h-7"></i>
+                        <span class="text-xs mt-1">Camere</span>
+                    </a>
+                </nav>
+            </div>
+            <div id="connection-status" class="flex items-center text-xs font-medium px-2 py-1 rounded-full bg-slate-800 w-full justify-center">
+                <span class="status-dot bg-red-500 mr-2"></span>
+                <span data-status-text></span>
+            </div>
+        </aside>
+
+        <!-- Contenuto Principale -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+            
+            <!-- VISTA: PANORAMICA -->
+            <div id="view-panoramica" class="view active">
+                <header class="mb-8">
+                    <h1 class="text-4xl font-bold text-white">Panoramica</h1>
+                    <p id="current-date" class="text-slate-400">Caricamento data...</p>
+                </header>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Colonna sinistra -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="main-card p-8 flex justify-between items-center">
+                            <div>
+                                <p class="text-xl text-slate-300">Bentornato a casa!</p>
+                                <h2 class="text-5xl font-extrabold text-white" data-entity-id="person.amedeo" data-state>Amedeo</h2>
+                            </div>
+                            <p id="current-time" class="text-7xl font-bold text-white">00:00</p>
+                        </div>
+                        <div class="main-card p-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">Azioni Rapide</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <button class="flex flex-col items-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-2xl" onclick="callService('scene', 'turn_on', { entity_id: 'scene.cinema' })"><i data-lucide="film" class="w-8 h-8 text-blue-400 mb-2"></i>Cinema</button>
+                                <button class="flex flex-col items-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-2xl" onclick="callService('scene', 'turn_on', { entity_id: 'scene.buonanotte' })"><i data-lucide="moon-star" class="w-8 h-8 text-indigo-400 mb-2"></i>Buonanotte</button>
+                                <button class="flex flex-col items-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-2xl" onclick="callService('script', 'turn_on', { entity_id: 'script.esco_di_casa' })"><i data-lucide="door-closed" class="w-8 h-8 text-amber-400 mb-2"></i>Esco</button>
+                                <button class="flex flex-col items-center p-4 bg-slate-800/50 hover:bg-slate-800 rounded-2xl" onclick="callService('script', 'turn_on', { entity_id: 'script.buongiorno' })"><i data-lucide="sun" class="w-8 h-8 text-yellow-400 mb-2"></i>Buongiorno</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Colonna destra -->
+                    <div class="space-y-6">
+                        <div class="main-card p-6 flex flex-col justify-between" data-entity-id="weather.forecast_casa">
+                             <div class="flex justify-between items-start mb-4">
+                                <div><p class="font-semibold text-white" data-location>Meteo</p><p class="text-slate-400" data-state>Caricamento...</p></div>
+                                <i data-lucide="sun" class="w-10 h-10 text-yellow-400" data-icon></i>
+                            </div>
+                            <p class="text-6xl font-bold text-white text-center" data-temperature>--<span class="text-3xl align-top">&deg;C</span></p>
+                        </div>
+                        <div class="main-card p-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">Stato Casa</h3>
+                            <div class="space-y-4 text-sm">
+                                <div class="flex justify-between items-center" data-entity-id="binary_sensor.porta_ingresso"><span class="flex items-center"><i data-lucide="door-open" class="w-5 h-5 mr-3"></i>Porta Ingresso</span><span class="font-semibold" data-state>...</span></div>
+                                <div class="flex justify-between items-center" data-entity-id="group.finestre"><span class="flex items-center"><i data-lucide="wind" class="w-5 h-5 mr-3"></i>Finestre</span><span class="font-semibold" data-state>...</span></div>
+                                <div class="flex justify-between items-center" data-entity-id="group.all_lights"><span class="flex items-center"><i data-lucide="lamp" class="w-5 h-5 mr-3"></i>Luci Accese</span><span class="font-semibold" data-state>...</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: STANZE -->
+            <div id="view-stanze" class="view">
+                <header class="mb-8">
+                    <h1 class="text-4xl font-bold text-white">Stanze</h1>
+                    <p class="text-slate-400">Controlla ogni ambiente della casa</p>
+                </header>
+                <div class="flex items-center space-x-2 mb-6" id="rooms-nav">
+                    <!-- Le tab delle stanze verranno generate da JS -->
+                </div>
+                <div id="rooms-content">
+                    <!-- Il contenuto delle stanze verrà generato da JS -->
+                </div>
+            </div>
+            
+            <!-- VISTA: MEDIA -->
+            <div id="view-media" class="view">
+                <header class="mb-8"><h1 class="text-4xl font-bold text-white">Media</h1><p class="text-slate-400">Gestisci la riproduzione multimediale</p></header>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="main-card p-6" data-entity-id="media_player.tv_soggiorno">
+                        <h3 class="font-semibold text-white mb-4 text-lg">TV Soggiorno</h3>
+                        <div class="flex items-center space-x-4">
+                            <img src="https://placehold.co/96x96/1e293b/FFF?text=TV" alt="Album Art" class="w-24 h-24 rounded-lg" data-album-art>
+                            <div class="flex-1"><p class="font-bold text-xl text-white" data-title>Nessuna Riproduzione</p><p class="text-slate-400" data-artist>...</p></div>
+                        </div>
+                        <div class="flex items-center justify-center space-x-6 mt-6">
+                            <i data-lucide="skip-back" class="w-7 h-7 text-slate-400 hover:text-white cursor-pointer" onclick="callService('media_player', 'media_previous_track', { entity_id: 'media_player.tv_soggiorno' })"></i>
+                            <div class="p-4 bg-sky-500 rounded-full cursor-pointer" onclick="callService('media_player', 'media_play_pause', { entity_id: 'media_player.tv_soggiorno' })"><i data-lucide="play" class="w-8 h-8 text-white" data-play-pause-icon></i></div>
+                            <i data-lucide="skip-forward" class="w-7 h-7 text-slate-400 hover:text-white cursor-pointer" onclick="callService('media_player', 'media_next_track', { entity_id: 'media_player.tv_soggiorno' })"></i>
+                        </div>
+                    </div>
+                     <div class="main-card p-6" data-entity-id="media_player.speaker_cucina">
+                        <h3 class="font-semibold text-white mb-4 text-lg">Speaker Cucina</h3>
+                        <div class="flex items-center space-x-4">
+                            <img src="https://placehold.co/96x96/1e293b/FFF?text=SPK" alt="Album Art" class="w-24 h-24 rounded-lg" data-album-art>
+                            <div class="flex-1"><p class="font-bold text-xl text-white" data-title>Nessuna Riproduzione</p><p class="text-slate-400" data-artist>...</p></div>
+                        </div>
+                        <div class="flex items-center justify-center space-x-6 mt-6">
+                            <i data-lucide="skip-back" class="w-7 h-7 text-slate-400 hover:text-white cursor-pointer" onclick="callService('media_player', 'media_previous_track', { entity_id: 'media_player.speaker_cucina' })"></i>
+                            <div class="p-4 bg-sky-500 rounded-full cursor-pointer" onclick="callService('media_player', 'media_play_pause', { entity_id: 'media_player.speaker_cucina' })"><i data-lucide="play" class="w-8 h-8 text-white" data-play-pause-icon></i></div>
+                            <i data-lucide="skip-forward" class="w-7 h-7 text-slate-400 hover:text-white cursor-pointer" onclick="callService('media_player', 'media_next_track', { entity_id: 'media_player.speaker_cucina' })"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: TELECAMERE -->
+            <div id="view-telecamere" class="view">
+                 <header class="mb-8"><h1 class="text-4xl font-bold text-white">Telecamere</h1><p class="text-slate-400">Controlla la sicurezza della tua casa</p></header>
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     <div class="main-card p-2" data-entity-id="camera.ingresso">
+                         <img src="https://placehold.co/1280x720/020617/1e293b?text=Feed+Camera+Ingresso" class="rounded-2xl w-full" data-camera-feed>
+                         <p class="p-4 font-semibold text-white">Ingresso</p>
+                     </div>
+                     <div class="main-card p-2" data-entity-id="camera.giardino">
+                         <img src="https://placehold.co/1280x720/020617/1e293b?text=Feed+Camera+Giardino" class="rounded-2xl w-full" data-camera-feed>
+                         <p class="p-4 font-semibold text-white">Giardino</p>
+                     </div>
+                 </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // ----------------------------------------------------------------------------
+        // 1. CONFIGURAZIONE
+        // ----------------------------------------------------------------------------
+        const HA_IP = '192.168.1.109';
+        const HA_URL = `ws://${HA_IP}:8123/api/websocket`;
+        const HA_HTTP_URL = `http://${HA_IP}:8123`;
+        const HA_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJlNmFkNWI2MzE0NTg0YWQ1YjQyNjFmYzcxYTYxOGVjOCIsImlhdCI6MTc1OTQ3NzUyNiwiZXhwIjoyMDc0ODM3NTI2fQ.yiNRJEGKkpexeE-DAotWGKhLBZw3nyKBj_AtJgSpJQQ';
+        
+        const roomsConfig = [
+            { id: 'soggiorno', name: 'Soggiorno', icon: 'sofa', entities: [
+                { id: 'light.luci_soggiorno', name: 'Luci Principali', icon: 'lamp' },
+                { id: 'light.piantana', name: 'Piantana', icon: 'lamp-floor' },
+                { id: 'switch.tv', name: 'Televisore', icon: 'tv-2' },
+                { id: 'sensor.temperatura_soggiorno', name: 'Temperatura', icon: 'thermometer' }
+            ]},
+            { id: 'cucina', name: 'Cucina', icon: 'chef-hat', entities: [
+                { id: 'light.luci_cucina', name: 'Luci Principali', icon: 'lamp-ceiling' },
+                { id: 'switch.macchina_caffe', name: 'Macchina Caffè', icon: 'coffee' },
+                { id: 'binary_sensor.sensore_fumo', name: 'Sensore Fumo', icon: 'flame' }
+            ]},
+            { id: 'camera', name: 'Camera da Letto', icon: 'bed-double', entities: [
+                { id: 'light.luci_camera', name: 'Luci Principali', icon: 'lamp' },
+                { id: 'light.abatjour', name: 'Abatjour', icon: 'lamp-wall-up' },
+                { id: 'switch.purificatore_aria', name: 'Purificatore', icon: 'air-vent' }
+            ]},
+            { id: 'studio', name: 'Studio', icon: 'laptop', entities: [
+                { id: 'light.luce_scrivania', name: 'Luce Scrivania', icon: 'lamp-desk' },
+                { id: 'switch.stampante', name: 'Stampante', icon: 'printer' },
+                { id: 'switch.monitor', name: 'Monitor', icon: 'monitor' }
+            ]},
+            { id: 'bagno', name: 'Bagno', icon: 'bath', entities: [
+                { id: 'light.luce_specchio', name: 'Luce Specchio', icon: 'lamp-wall-down' },
+                { id: 'sensor.umidita_bagno', name: 'Umidità', icon: 'droplets' }
+            ]}
+        ];
+
+        // ----------------------------------------------------------------------------
+        // 2. LOGICA WEBSOCKET E GESTIONE DELLO STATO
+        // ----------------------------------------------------------------------------
+        let ws; let messageId = 1; let entities = {};
+        function connect() {
+            console.log('Tentativo di connessione a Home Assistant...');
+            ws = new WebSocket(HA_URL);
+            ws.onopen = () => console.log('Connessione WebSocket aperta.');
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                switch (message.type) {
+                    case 'auth_required': ws.send(JSON.stringify({ type: 'auth', access_token: HA_TOKEN })); break;
+                    case 'auth_ok':
+                        console.log('Autenticazione riuscita!');
+                        updateConnectionStatus(true);
+                        ws.send(JSON.stringify({ id: messageId++, type: 'subscribe_events', event_type: 'state_changed' }));
+                        ws.send(JSON.stringify({ id: messageId++, type: 'get_states' }));
+                        break;
+                    case 'auth_invalid': console.error('Autenticazione fallita:', message.message); updateConnectionStatus(false, 'Auth Fallita'); ws.close(); break;
+                    case 'event':
+                        if (message.event.event_type === 'state_changed') {
+                            const entity = message.event.data.new_state;
+                            if (entity) {
+                                entities[entity.entity_id] = entity; 
+                                updateEntityUI(entity);
+                            }
+                        }
+                        break;
+                    case 'result':
+                        if (message.success && Array.isArray(message.result)) {
+                            message.result.forEach(entity => { if(entity) { entities[entity.entity_id] = entity; updateEntityUI(entity); } });
+                        } else if (!message.success) { console.error(`Errore comando ${message.id}:`, message.error); }
+                        break;
+                }
+            };
+            ws.onclose = () => { console.log('Connessione chiusa. Riconnessione tra 5s...'); updateConnectionStatus(false); setTimeout(connect, 5000); };
+            ws.onerror = (error) => { console.error('Errore WebSocket:', error); ws.close(); };
+        }
+        function callService(domain, service, serviceData) {
+            if (ws.readyState !== WebSocket.OPEN) { console.error('WebSocket non connesso.'); return; }
+            ws.send(JSON.stringify({ id: messageId++, type: 'call_service', domain, service, service_data: serviceData }));
+        }
+        
+        // ----------------------------------------------------------------------------
+        // 3. FUNZIONI DI AGGIORNAMENTO DELL'INTERFACCIA
+        // ----------------------------------------------------------------------------
+        function translateWeatherState(state) {
+            const translations = {
+                'clear-night': 'Sereno', 'cloudy': 'Nuvoloso', 'exceptional': 'Condizioni Eccezionali',
+                'fog': 'Nebbia', 'hail': 'Grandine', 'lightning': 'Fulmini',
+                'lightning-rainy': 'Temporale', 'partlycloudy': 'Parz. Nuvoloso', 'pouring': 'Rovescio',
+                'rainy': 'Piovoso', 'snowy': 'Neve', 'snowy-rainy': 'Nevischio',
+                'sunny': 'Soleggiato', 'windy': 'Ventoso', 'windy-variant': 'Ventoso'
+            };
+            return translations[state] || state.charAt(0).toUpperCase() + state.slice(1);
+        }
+
+        function getWeatherIcon(state) {
+            const icons = {
+                'clear-night': 'moon', 'cloudy': 'cloud', 'fog': 'cloud-fog',
+                'hail': 'cloud-hail', 'lightning': 'zap', 'lightning-rainy': 'cloud-lightning',
+                'partlycloudy': 'cloud-sun', 'pouring': 'cloud-drizzle', 'rainy': 'cloud-rain',
+                'snowy': 'cloud-snow', 'snowy-rainy': 'cloud-sleet', 'sunny': 'sun',
+                'windy': 'wind', 'windy-variant': 'wind'
+            };
+            return icons[state] || 'thermometer-sun';
+        }
+
+        function updateEntityUI(entity) {
+            document.querySelectorAll(`[data-entity-id="${entity.entity_id}"]`).forEach(element => {
+                const state = entity.state;
+                const stateEl = element.querySelector('[data-state]');
+                const domain = entity.entity_id.split('.')[0];
+
+                switch(domain) {
+                    case 'light': case 'switch':
+                        const is_on = state === 'on';
+                        const toggleInput = element.querySelector('input[type="checkbox"]');
+                        if (toggleInput) toggleInput.checked = is_on;
+                        if(stateEl) stateEl.textContent = is_on ? 'Acceso' : 'Spento';
+                        element.classList.toggle('bg-sky-500/20', is_on);
+                        break;
+                    case 'sensor':
+                        if(stateEl) {
+                           const unit = entity.attributes.unit_of_measurement || '';
+                           stateEl.textContent = `${state} ${unit}`;
+                        }
+                        break;
+                    case 'binary_sensor':
+                        if(stateEl) {
+                            const friendlyState = state === 'on' ? 'Aperto/Rilevato' : 'Chiuso/OK';
+                            stateEl.textContent = friendlyState;
+                            stateEl.classList.toggle('text-amber-400', state === 'on');
+                        }
+                        break;
+                    case 'person':
+                        if(stateEl) stateEl.textContent = state === 'home' ? 'A casa' : 'Fuori casa';
+                        break;
+                    case 'weather':
+                        const temp = entity.attributes.temperature;
+                        const condition = state;
+                        const tempEl = element.querySelector('[data-temperature]');
+                        const weatherStateEl = element.querySelector('[data-state]');
+                        const iconEl = element.querySelector('[data-icon]');
+                        const locationEl = element.querySelector('[data-location]');
+
+                        if (locationEl && entity.attributes.friendly_name) {
+                            locationEl.textContent = entity.attributes.friendly_name;
+                        }
+                        if (temp !== undefined && tempEl) {
+                            tempEl.innerHTML = `${Math.round(temp)}<span class="text-3xl align-top">&deg;C</span>`;
+                        }
+                        if (weatherStateEl) {
+                            weatherStateEl.textContent = translateWeatherState(condition);
+                        }
+                        if (iconEl) {
+                            iconEl.setAttribute('data-lucide', getWeatherIcon(condition));
+                            lucide.createIcons();
+                        }
+                        break;
+                    case 'media_player':
+                        const playPauseIcon = element.querySelector('[data-play-pause-icon]');
+                        if (state === 'playing' || state === 'on') {
+                            element.querySelector('[data-title]').textContent = entity.attributes.media_title || 'Sconosciuto';
+                            element.querySelector('[data-artist]').textContent = entity.attributes.media_artist || '...';
+                             element.querySelector('[data-album-art]').src = entity.attributes.entity_picture ? `${HA_HTTP_URL}${entity.attributes.entity_picture}` : 'https://placehold.co/96x96/1e293b/FFF?text=MEDIA';
+                            if (playPauseIcon) playPauseIcon.setAttribute('data-lucide', state === 'playing' ? 'pause' : 'play');
+                        } else {
+                            element.querySelector('[data-title]').textContent = state === 'off' ? 'Spento' : 'In Pausa';
+                            element.querySelector('[data-artist]').textContent = '...';
+                            if (playPauseIcon) playPauseIcon.setAttribute('data-lucide', 'play');
+                        }
+                        lucide.createIcons();
+                        break;
+                    case 'camera':
+                        const timestamp = new Date().getTime();
+                        element.querySelector('[data-camera-feed]').src = `${HA_HTTP_URL}${entity.attributes.entity_picture}&t=${timestamp}`;
+                        break;
+                }
+            });
+        }
+        function updateConnectionStatus(isConnected, text) {
+            const statusEl = document.getElementById('connection-status');
+            const dot = statusEl.querySelector('.status-dot');
+            const span = statusEl.querySelector('[data-status-text]');
+            dot.classList.toggle('bg-green-500', isConnected);
+            dot.classList.toggle('bg-red-500', !isConnected);
+            span.textContent = text || (isConnected ? 'Online' : 'Offline');
+        }
+
+        // ----------------------------------------------------------------------------
+        // 4. LOGICA DI NAVIGAZIONE E RENDER
+        // ----------------------------------------------------------------------------
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('#main-nav a');
+            const views = document.querySelectorAll('.view');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const viewId = link.dataset.view;
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    views.forEach(v => v.classList.remove('active'));
+                    document.getElementById(`view-${viewId}`).classList.add('active');
+                });
+            });
+        }
+        function renderRooms() {
+            const navContainer = document.getElementById('rooms-nav');
+            const contentContainer = document.getElementById('rooms-content');
+            
+            roomsConfig.forEach((room, index) => {
+                // Render tab
+                const tab = document.createElement('button');
+                tab.className = `room-tab font-semibold px-4 py-2 rounded-lg ${index === 0 ? 'active' : ''}`;
+                tab.dataset.roomId = room.id;
+                tab.textContent = room.name;
+                navContainer.appendChild(tab);
+
+                // Render content
+                const content = document.createElement('div');
+                content.id = `room-${room.id}`;
+                content.className = `room-content ${index === 0 ? 'block' : 'hidden'}`;
+                let entitiesHTML = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
+                room.entities.forEach(entity => {
+                    const isToggle = entity.id.startsWith('light.') || entity.id.startsWith('switch.');
+                    entitiesHTML += `
+                        <div class="main-card p-4 flex flex-col justify-between" data-entity-id="${entity.id}">
+                            <div class="flex justify-between items-start">
+                                <div class="p-3 bg-slate-800 rounded-full"><i data-lucide="${entity.icon}" class="w-5 h-5 text-sky-400"></i></div>
+                                ${isToggle ? `<label class="toggle-switch"><input type="checkbox" onchange="callService('${entity.id.split('.')[0]}', 'toggle', { entity_id: '${entity.id}' })"><span class="slider"></span></label>` : ''}
+                            </div>
+                            <div class="mt-4">
+                                <p class="font-semibold text-white">${entity.name}</p>
+                                <p class="text-sm text-slate-400" data-state>...</p>
+                            </div>
+                        </div>`;
+                });
+                entitiesHTML += '</div>';
+                content.innerHTML = entitiesHTML;
+                contentContainer.appendChild(content);
+            });
+            lucide.createIcons();
+            
+            // Add click listener to tabs
+            document.querySelectorAll('.room-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.room-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.room-content').forEach(c => c.style.display = 'none');
+                    document.getElementById(`room-${tab.dataset.roomId}`).style.display = 'block';
+                });
+            });
+        }
+
+        // ----------------------------------------------------------------------------
+        // 5. INIZIALIZZAZIONE
+        // ----------------------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            updateConnectionStatus(false); // Imposta lo stato iniziale su Offline
+            const timeEl = document.getElementById('current-time');
+            const dateEl = document.getElementById('current-date');
+            const updateClock = () => {
+                const now = new Date();
+                timeEl.textContent = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                dateEl.textContent = now.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            };
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            setupNavigation();
+            renderRooms();
+            connect();
+        });
+    </script>
+</body>
+</html>
+
