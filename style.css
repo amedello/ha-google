@@ -330,8 +330,6 @@ main {
 @media (max-width: 900px) {
   .sidebar-overlay {
     display: block;
-    left: var(--sidebar-width);
-    width: calc(100% - var(--sidebar-width));
   }
 
   .sidebar {
@@ -353,6 +351,7 @@ main {
     pointer-events: auto;
     visibility: visible;
     backdrop-filter: blur(6px);
+    left: var(--sidebar-width);
   }
 
   .content-shell {
@@ -392,17 +391,6 @@ main {
 
   body.sidebar-open .sidebar-overlay {
     left: var(--sidebar-width-compact);
-  }
-
-  .sidebar-overlay {
-    left: var(--sidebar-width-compact);
-    width: calc(100% - var(--sidebar-width-compact));
-  }
-
-  .card-size-large {
-    grid-column: span 1;
-    grid-row: span 1;
-    min-height: 240px;
   }
 }
 
