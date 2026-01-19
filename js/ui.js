@@ -370,6 +370,7 @@ function generateWelcomeCardHTML(card, viewIndex, roomIndex, cardIndex) {
             <div>
                 <p class="text-xl text-slate-300">${card.title || 'Benvenuto!'}</p>
                 <h2 class="text-5xl font-extrabold text-white" data-entity-id="person.user" data-state>Utente</h2>
+                <p id="current-date" class="text-sm text-slate-400 mt-2">--</p>
             </div>
             <p id="current-time" class="text-7xl font-bold text-white">--:--</p>
         </div>
@@ -607,12 +608,18 @@ function startClock() {
 
     const timeEl = document.getElementById('current-time');
     const dateEl = document.getElementById('current-date');
+    const topbarTimeEl = document.getElementById('topbar-time');
+    const topbarDateEl = document.getElementById('topbar-date');
 
-    if (timeEl || dateEl) {
+    if (timeEl || dateEl || topbarTimeEl || topbarDateEl) {
         const updateClock = () => {
             const now = new Date();
-            if (timeEl) timeEl.textContent = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            if (dateEl) dateEl.textContent = now.toLocaleDateString('it-IT', { weekday: 'long', month: 'long', day: 'numeric' });
+            const formattedTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            const formattedDate = now.toLocaleDateString('it-IT', { weekday: 'long', month: 'long', day: 'numeric' });
+            if (timeEl) timeEl.textContent = formattedTime;
+            if (dateEl) dateEl.textContent = formattedDate;
+            if (topbarTimeEl) topbarTimeEl.textContent = formattedTime;
+            if (topbarDateEl) topbarDateEl.textContent = formattedDate;
         };
         updateClock();
         clockInterval = setInterval(updateClock, 1000);
@@ -621,12 +628,19 @@ function startClock() {
 
 function updateConnectionStatus(isConnected, text) {
     const statusEl = document.getElementById('connection-status');
+    const topbarConnection = document.getElementById('topbar-connection');
+    const topbarDot = document.querySelector('[data-topbar-dot]');
     if (!statusEl) return;
     const dot = statusEl.querySelector('.status-dot');
     const span = statusEl.querySelector('[data-status-text]');
     dot.classList.toggle('bg-green-500', isConnected);
     dot.classList.toggle('bg-red-500', !isConnected);
     span.textContent = text || (isConnected ? 'Online' : 'Offline');
+    if (topbarConnection) topbarConnection.textContent = text || (isConnected ? 'Online' : 'Offline');
+    if (topbarDot) {
+        topbarDot.classList.toggle('bg-green-500', isConnected);
+        topbarDot.classList.toggle('bg-red-500', !isConnected);
+    }
 }
 
 function updateEntityUI(entity) {
@@ -763,8 +777,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     if (mobileMenuBtn && sidebarOverlay) {
         const toggleSidebar = () => document.body.classList.toggle('sidebar-open');
+        const updateSidebarState = (event) => {
+            if (!event.matches) {
+                document.body.classList.remove('sidebar-open');
+            }
+        };
         mobileMenuBtn.addEventListener('click', toggleSidebar);
         sidebarOverlay.addEventListener('click', toggleSidebar);
+        const mobileQuery = window.matchMedia('(max-width: 900px)');
+        mobileQuery.addEventListener('change', updateSidebarState);
+        updateSidebarState(mobileQuery);
     }
     
     const entityModal = document.getElementById('entity-modal');
