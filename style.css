@@ -1,0 +1,145 @@
+/* ======================================================
+   BASE
+   ====================================================== */
+
+:root {
+  --bg-main: #0f172a;
+  --bg-card: #020617;
+  --border: #1e293b;
+  --text-main: #e5e7eb;
+  --text-muted: #94a3b8;
+
+  --room-accent: #3b82f6;
+  --room-accent-soft: rgba(59,130,246,0.15);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s ease;
+}
+
+/* ======================================================
+   VIEW / EDIT MODE
+   ====================================================== */
+
+body.view-mode .edit-control {
+  display: none !important;
+}
+
+body.edit-mode .edit-control {
+  display: flex;
+}
+
+/* ======================================================
+   ROOM COLOR SYSTEM
+   ====================================================== */
+
+/* SOGGIORNO */
+body[data-room="soggiorno"] {
+  --room-accent: #2563eb;
+  --room-accent-soft: rgba(37,99,235,0.18);
+}
+
+/* CUCINA */
+body[data-room="cucina"] {
+  --room-accent: #f59e0b;
+  --room-accent-soft: rgba(245,158,11,0.18);
+}
+
+/* CUCININO */
+body[data-room="cucinino"] {
+  --room-accent: #fb923c;
+  --room-accent-soft: rgba(251,146,60,0.18);
+}
+
+/* CAMERA DA LETTO */
+body[data-room="camera_da_letto"] {
+  --room-accent: #7c3aed;
+  --room-accent-soft: rgba(124,58,237,0.18);
+}
+
+/* BAGNO */
+body[data-room="bagno"] {
+  --room-accent: #38bdf8;
+  --room-accent-soft: rgba(56,189,248,0.18);
+}
+
+/* ======================================================
+   HEADER
+   ====================================================== */
+
+header h1 {
+  color: var(--room-accent);
+}
+
+/* ======================================================
+   CARDS
+   ====================================================== */
+
+.main-card {
+  background-color: var(--bg-card);
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.main-card:hover {
+  border-color: var(--room-accent);
+  box-shadow: 0 0 0 1px var(--room-accent-soft);
+}
+
+/* STRIP LATERALE */
+.card-status-strip {
+  width: 4px;
+  background-color: var(--room-accent);
+  border-radius: 4px 0 0 4px;
+}
+
+/* ======================================================
+   BUTTONS / TOGGLE
+   ====================================================== */
+
+.remote-btn {
+  border: 1px solid var(--room-accent-soft);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.remote-btn:hover {
+  background-color: var(--room-accent-soft);
+  border-color: var(--room-accent);
+}
+
+/* TOGGLE */
+.toggle-switch input:checked + .slider {
+  background-color: var(--room-accent);
+}
+
+/* ======================================================
+   ROOM TABS
+   ====================================================== */
+
+.room-tab {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.room-tab.active {
+  background-color: var(--room-accent-soft);
+  border-color: var(--room-accent);
+  color: var(--room-accent);
+}
+
+/* ======================================================
+   ADD CARD
+   ====================================================== */
+
+.edit-control button {
+  transition: background-color 0.2s ease;
+}
+
+.edit-control button:hover {
+  background-color: var(--room-accent-soft);
+}

@@ -1,0 +1,68 @@
+{
+  "sidebar_widgets": [],
+  "views": [
+    {
+      "id": "panoramica",
+      "name": "Panoramica",
+      "icon": "layout-dashboard",
+      "layout": "grid",
+      "cards": [
+        {
+          "type": "entity",
+          "id": "alarm_control_panel.ezviz_alarm",
+          "name": "test",
+          "icon": "home"
+        },
+        {
+          "type": "entity",
+          "id": "automation.verifica_stato_luci_con_ritardo",
+          "name": "yes",
+          "icon": "test"
+        },
+        {
+          "type": "welcome",
+          "title": "Benvenuto a casa!",
+          "id": "card.welcome.1759929653682",
+          "name": "Welcome Card"
+        },
+        {
+          "type": "weather",
+          "id": "weather.forecast_casa",
+          "name": "Forecast Casa",
+          "icon": "sun"
+        },
+        {
+          "type": "quick_actions",
+          "title": "Azioni Rapide",
+          "entities": [
+            "scene.in_casa",
+            "scene.in_casa",
+            "scene.in_casa",
+            "scene.in_casa"
+          ],
+          "id": "card.quick_actions.1759931823573",
+          "name": "Quick Actions Card"
+        },
+        {
+          "type": "entity",
+          "id": "automation.controllo_telecomando_ikea_light_test_2",
+          "name": "ate",
+          "icon": "tes"
+        },
+        {
+          "type": "entity",
+          "id": "automation.controllo_switch_tra_tramonto_e_alba",
+          "name": "test",
+          "icon": "mdi:home"
+        }
+      ]
+    },
+    {
+      "id": "stanze",
+      "name": "Stanze",
+      "icon": "sofa",
+      "layout": "tabs",
+      "rooms": []
+    }
+  ]
+}
