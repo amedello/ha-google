@@ -2,51 +2,154 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Home Dashboard</title>
+  <title>HA Fusion Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- CSS -->
   <link rel="stylesheet" href="/local/style.css" />
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 
-  <!-- ?? LUCIDE DEVE ESSERE PRIMA -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- APP JS -->
   <script type="module" src="/local/js/ui.js" defer></script>
 </head>
 <body>
 
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
 <div class="app-shell">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="logo">HA</div>
+    <div class="sidebar-header">
+      <div class="logo">HA</div>
+      <div class="logo-text">
+        <strong>HA Fusion</strong>
+        <span>Dashboard Casa</span>
+      </div>
+    </div>
 
-    <!-- ?? QUESTO ERA IL PEZZO MANCANTE -->
-    <nav id="room-tabs"></nav>
-<button id="toggle-edit-mode"
-        class="edit-only"
-        title="Modalit� modifica"
-        style="margin-top:auto">
-  <i class="mdi mdi-pencil"></i>
-</button>
+    <nav id="main-nav" class="sidebar-nav"></nav>
+
+    <div class="sidebar-footer">
+      <div id="connection-status" class="status-pill">
+        <span class="status-dot"></span>
+        <span data-status-text>Offline</span>
+      </div>
+      <p class="sidebar-hint">Aggiungi <code>?modifica=true</code> all'URL per configurare viste, stanze ed entità.</p>
+    </div>
   </aside>
 
-  <!-- ?? QUESTO ERA IL PEZZO MANCANTE -->
-  <main id="main-content"></main>
+  <div class="content-shell">
+    <header class="topbar">
+      <button id="mobile-menu-btn" class="icon-btn" aria-label="Apri menu">
+        <i data-lucide="menu"></i>
+      </button>
+      <div class="topbar-title">
+        <h1>Panoramica Casa</h1>
+        <p>Controllo intelligente e panoramica rapida degli ambienti.</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="location.reload()" title="Aggiorna">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+      </div>
+    </header>
 
+    <main id="main-content"></main>
+  </div>
 </div>
 
-<!-- MODAL -->
+<!-- MODAL ENTITÀ -->
 <div id="entity-modal" class="modal hidden">
   <div class="modal-card">
-    <header>
+    <header class="modal-header">
       <h3 id="modal-title"></h3>
-      <button id="modal-close">?</button>
+      <button id="modal-close-btn" class="icon-btn" aria-label="Chiudi">
+        <i data-lucide="x"></i>
+      </button>
     </header>
-    <div id="modal-body"></div>
+    <div id="modal-body" class="modal-body"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG VISTA -->
+<div id="view-config-modal" class="modal hidden">
+  <div class="modal-card">
+    <header class="modal-header">
+      <h3>Configura Vista</h3>
+      <button class="icon-btn btn-cancel" aria-label="Chiudi">
+        <i data-lucide="x"></i>
+      </button>
+    </header>
+    <form id="view-config-form" class="modal-form">
+      <label>
+        Nome Vista
+        <input id="view-name-input" type="text" required />
+      </label>
+      <label>
+        Icona (Lucide)
+        <input id="view-icon-input" type="text" placeholder="layout-dashboard" required />
+      </label>
+      <label>
+        Layout
+        <select id="view-layout-select" required>
+          <option value="grid">Griglia (Panoramica)</option>
+          <option value="tabs">Schede (Stanze)</option>
+        </select>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary btn-cancel">Annulla</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL CONFIG STANZA -->
+<div id="room-config-modal" class="modal hidden">
+  <div class="modal-card">
+    <header class="modal-header">
+      <h3>Configura Stanza</h3>
+      <button class="icon-btn btn-cancel" aria-label="Chiudi">
+        <i data-lucide="x"></i>
+      </button>
+    </header>
+    <form id="room-config-form" class="modal-form">
+      <label>
+        Nome Stanza
+        <input id="room-name-input" type="text" required />
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary btn-cancel">Annulla</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL CONFIG CARD -->
+<div id="entity-config-modal" class="modal hidden">
+  <div class="modal-card">
+    <header class="modal-header">
+      <h3>Configura Card</h3>
+      <button class="icon-btn btn-cancel" aria-label="Chiudi">
+        <i data-lucide="x"></i>
+      </button>
+    </header>
+    <form id="entity-config-form" class="modal-form">
+      <label>
+        Tipo Card
+        <select id="card-type-select" required>
+          <option value="entity">Entità</option>
+          <option value="welcome">Welcome</option>
+          <option value="weather">Meteo</option>
+          <option value="quick_actions">Azioni rapide</option>
+        </select>
+      </label>
+      <div id="card-config-fields" class="modal-fields"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary btn-cancel">Annulla</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
   </div>
 </div>
 
