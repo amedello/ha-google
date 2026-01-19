@@ -295,6 +295,10 @@ main {
   border-color: rgba(56, 189, 248, 0.5);
 }
 
+.mobile-only {
+  display: none;
+}
+
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -302,6 +306,7 @@ main {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
+  z-index: 40;
   z-index: 20;
   backdrop-filter: blur(6px);
 }
@@ -324,7 +329,7 @@ main {
     bottom: 0;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
-    z-index: 30;
+    z-index: 50;
   }
 
   body.sidebar-open .sidebar {
@@ -342,6 +347,10 @@ main {
 
   .topbar {
     padding: 1rem;
+  }
+
+  .mobile-only {
+    display: inline-grid;
   }
 }
 

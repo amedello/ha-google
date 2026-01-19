@@ -777,8 +777,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     if (mobileMenuBtn && sidebarOverlay) {
         const toggleSidebar = () => document.body.classList.toggle('sidebar-open');
+        const updateSidebarState = (event) => {
+            if (!event.matches) {
+                document.body.classList.remove('sidebar-open');
+            }
+        };
         mobileMenuBtn.addEventListener('click', toggleSidebar);
         sidebarOverlay.addEventListener('click', toggleSidebar);
+        const mobileQuery = window.matchMedia('(max-width: 900px)');
+        mobileQuery.addEventListener('change', updateSidebarState);
+        updateSidebarState(mobileQuery);
     }
     
     const entityModal = document.getElementById('entity-modal');
