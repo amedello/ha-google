@@ -492,6 +492,29 @@ body[data-room="bagno"] {
   box-shadow: var(--shadow-card);
 }
 
+.entity-grid {
+  grid-auto-rows: 160px;
+}
+
+.entity-grid .main-card {
+  height: 100%;
+}
+
+.card-size-compact {
+  min-height: 120px;
+}
+
+.card-size-standard {
+  min-height: 160px;
+}
+
+.card-size-large {
+  grid-column: span 2;
+  grid-row: span 2;
+  min-height: 320px;
+  aspect-ratio: 1 / 1;
+}
+
 .main-card:hover {
   border-color: rgba(56, 189, 248, 0.4);
   box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.16), 0 18px 35px rgba(15, 23, 42, 0.65);
