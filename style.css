@@ -23,6 +23,8 @@
   --shadow-soft: 0 20px 45px rgba(15, 23, 42, 0.45);
   --shadow-card: 0 18px 35px rgba(15, 23, 42, 0.6);
   --radius-lg: 1.2rem;
+  --sidebar-width: 260px;
+  --sidebar-width-compact: 230px;
 }
 
 * {
@@ -95,7 +97,7 @@ input[type="range"] {
 }
 
 .sidebar {
-  width: 260px;
+  width: var(--sidebar-width);
   background: linear-gradient(180deg, rgba(11, 16, 32, 0.95), rgba(6, 13, 27, 0.98));
   border-right: 1px solid var(--border);
   display: flex;
@@ -301,14 +303,18 @@ main {
 
 .sidebar-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(15, 23, 42, 0.65);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  z-index: 40;
   z-index: 20;
-  backdrop-filter: blur(6px);
+  backdrop-filter: none;
+  visibility: hidden;
+  display: none;
 }
 
 @media (max-width: 1200px) {
@@ -322,6 +328,12 @@ main {
 }
 
 @media (max-width: 900px) {
+  .sidebar-overlay {
+    display: block;
+    left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+
   .sidebar {
     position: fixed;
     left: 0;
@@ -339,6 +351,8 @@ main {
   body.sidebar-open .sidebar-overlay {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
+    backdrop-filter: blur(6px);
   }
 
   .content-shell {
@@ -373,7 +387,22 @@ main {
   }
 
   .sidebar {
-    width: 230px;
+    width: var(--sidebar-width-compact);
+  }
+
+  body.sidebar-open .sidebar-overlay {
+    left: var(--sidebar-width-compact);
+  }
+
+  .sidebar-overlay {
+    left: var(--sidebar-width-compact);
+    width: calc(100% - var(--sidebar-width-compact));
+  }
+
+  .card-size-large {
+    grid-column: span 1;
+    grid-row: span 1;
+    min-height: 240px;
   }
 }
 
@@ -473,6 +502,29 @@ body[data-room="bagno"] {
   padding: 1.2rem;
   position: relative;
   box-shadow: var(--shadow-card);
+}
+
+.entity-grid {
+  grid-auto-rows: 160px;
+}
+
+.entity-grid .main-card {
+  height: 100%;
+}
+
+.card-size-compact {
+  min-height: 120px;
+}
+
+.card-size-standard {
+  min-height: 160px;
+}
+
+.card-size-large {
+  grid-column: span 2;
+  grid-row: span 2;
+  min-height: 320px;
+  aspect-ratio: 1 / 1;
 }
 
 .main-card:hover {

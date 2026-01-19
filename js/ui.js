@@ -252,7 +252,7 @@ function renderGridView(container, view) {
     }
 
     // 2. Renderizza la griglia delle card normali
-    contentHTML += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
+    contentHTML += '<div class="entity-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
     normalCards.forEach(card => {
         const originalIndex = (view.cards || []).findIndex(c => c === card);
         if (card.type === 'weather') {
@@ -295,7 +295,7 @@ function renderTabsView(container, view) {
         const content = document.createElement('div');
         content.id = `room-${room.id}`;
         content.className = 'room-content hidden';
-        let cardsHTML = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
+        let cardsHTML = '<div class="entity-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
         (room.cards || []).forEach((card, cardIndex) => {
              cardsHTML += generateEntityCardHTML(card, viewIndex, roomIndex, cardIndex);
         });
@@ -326,22 +326,58 @@ document.body.setAttribute('data-room', room.id);
     });
 }
 
+function supportsAdvancedEntity(entity) {
+    if (!entity) return false;
+    const domain = entity.entity_id.split('.')[0];
+    if (domain === 'light') {
+        const modes = entity.attributes.supported_color_modes || [];
+        return modes.some(mode => ['rgb', 'hs', 'xy', 'color_temp'].includes(mode));
+    }
+    return false;
+}
+
+function getDefaultCardSize(cardId) {
+    const domain = cardId ? cardId.split('.')[0] : '';
+    if (domain === 'camera') return 'large';
+    if (domain === 'switch') return 'compact';
+    return 'standard';
+}
+
+function findCardConfig(entityId) {
+    for (const view of dashboardConfig.views) {
+        if (view.layout === 'tabs' && view.rooms) {
+            for (const room of view.rooms) {
+                const found = (room.cards || []).find(c => c.id === entityId);
+                if (found) return found;
+            }
+        } else if (view.cards) {
+            const found = view.cards.find(c => c.id === entityId);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
 // In ui.js, sostituisci questa funzione
 
 function generateEntityCardHTML(card, viewIndex, roomIndex, cardIndex) {
     const domain = card.id.split('.')[0];
     const handler = entityHandlers[domain];
-    const canOpenModal = handler && handler.createModalControls;
+    const entity = entities[card.id];
+    const hasAdvancedSupport = supportsAdvancedEntity(entity);
+    const allowAdvanced = card.advanced_controls ?? hasAdvancedSupport;
+    const canOpenModal = handler && handler.createModalControls && allowAdvanced;
     const hasToggle = ['light', 'switch', 'media_player', 'climate'].includes(domain);
+    const sizeClass = `card-size-${card.size || getDefaultCardSize(card.id)}`;
     const editParams = `${viewIndex}, ${roomIndex === null ? 'null' : roomIndex}, ${cardIndex}`;
     
     return `
-        <div class="main-card relative" data-entity-id="${card.id}">
+        <div class="main-card relative ${sizeClass}" data-entity-id="${card.id}">
             <div class="edit-control absolute top-2 right-2 space-x-1 z-10">
                 <button onclick="openEntityConfigModal(${editParams})" class="p-1 bg-slate-700 rounded-full"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                 <button onclick="deleteEntity(${editParams})" class="p-1 bg-red-800 rounded-full"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
             </div>
-            <div class="card-body ${canOpenModal && !isEditMode ? 'cursor-pointer' : ''}" data-entity-id-modal="${card.id}">
+            <div class="card-body ${canOpenModal && !isEditMode ? 'cursor-pointer' : ''}" ${canOpenModal ? `data-entity-id-modal="${card.id}"` : ''}>
                 <div class="card-status-strip">
                     ${generateIconHTML(card.icon, 'w-6 h-6')}
                 </div>
@@ -486,6 +522,9 @@ function renderCardConfigFields(cardType, cardData = null) {
 
         case 'entity':
         default:
+            const selectedEntityId = cardData?.id || '';
+            const defaultSize = cardData?.size || getDefaultCardSize(selectedEntityId);
+            const defaultAdvanced = cardData?.advanced_controls ?? supportsAdvancedEntity(entities[selectedEntityId]);
             fieldsHTML = `
                 <div>
                     <label class="font-medium text-white">Dispositivo</label>
@@ -496,6 +535,24 @@ function renderCardConfigFields(cardType, cardData = null) {
                 </div>
                 <div><label class="font-medium text-white">Nome Visualizzato</label><input name="name" type="text" class="w-full p-2 mt-1 rounded-lg bg-slate-700" value="${cardData?.name || ''}" required></div>
                 <div><label class="font-medium text-white">Icona</label><input name="icon" type="text" class="w-full p-2 mt-1 rounded-lg bg-slate-700" value="${cardData?.icon || ''}" required></div>
+                <div>
+                    <label class="font-medium text-white">Dimensione Card</label>
+                    <select name="size" class="w-full p-2 mt-1 rounded-lg bg-slate-700">
+                        <option value="compact" ${defaultSize === 'compact' ? 'selected' : ''}>Compatta</option>
+                        <option value="standard" ${defaultSize === 'standard' ? 'selected' : ''}>Standard</option>
+                        <option value="large" ${defaultSize === 'large' ? 'selected' : ''}>Grande (quadrata)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-medium text-white">Controlli avanzati</label>
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-sm text-slate-400">Apri la modale per controlli avanzati</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="advanced_controls" ${defaultAdvanced ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
             `;
             break;
     }
@@ -509,6 +566,14 @@ function renderCardConfigFields(cardType, cardData = null) {
             Array.from(select.options).forEach(option => {
                 option.style.display = option.textContent.toLowerCase().includes(filter) ? '' : 'none';
             });
+        });
+
+        select.addEventListener('change', () => {
+            const sizeSelect = cardConfigFields.querySelector('select[name="size"]');
+            const advancedToggle = cardConfigFields.querySelector('input[name="advanced_controls"]');
+            const selectedId = select.value;
+            if (sizeSelect) sizeSelect.value = getDefaultCardSize(selectedId);
+            if (advancedToggle) advancedToggle.checked = supportsAdvancedEntity(entities[selectedId]);
         });
     }
 }
@@ -671,6 +736,10 @@ function openEntityModal(entityId) {
     const domain = entityId.split('.')[0];
     const handler = entityHandlers[domain];
     if (!handler || !handler.createModalControls) return;
+    const cardConfig = findCardConfig(entityId);
+    const hasAdvancedSupport = supportsAdvancedEntity(entity);
+    const allowAdvanced = cardConfig?.advanced_controls ?? hasAdvancedSupport;
+    if (!allowAdvanced) return;
 
     activeModalEntityId = entityId;
     const modal = document.getElementById('entity-modal');
@@ -680,20 +749,6 @@ function openEntityModal(entityId) {
 
     modalTitle.textContent = entity.attributes.friendly_name || entityId;
     modalBody.innerHTML = '';
-
-    let cardConfig = null;
-    for (const view of dashboardConfig.views) {
-        if (view.layout === 'tabs' && view.rooms) {
-            for (const room of view.rooms) {
-                const found = (room.cards || []).find(c => c.id === entityId);
-                if (found) { cardConfig = found; break; }
-            }
-        } else if (view.cards) {
-            const found = view.cards.find(c => c.id === entityId);
-            if (found) { cardConfig = found; break; }
-        }
-        if (cardConfig) break;
-    }
 
     handler.createModalControls(modalBody, entity, cardConfig, callService);
     if (handler.updateModalControls) {
@@ -872,6 +927,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     newCard.id = cardConfigFields.querySelector('select[name="id"]').value;
                     newCard.name = cardConfigFields.querySelector('[name="name"]').value;
                     newCard.icon = cardConfigFields.querySelector('[name="icon"]').value;
+                    newCard.size = cardConfigFields.querySelector('[name="size"]').value;
+                    newCard.advanced_controls = cardConfigFields.querySelector('[name="advanced_controls"]').checked;
                     break;
             }
 
