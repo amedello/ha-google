@@ -5,6 +5,9 @@
   <title>HA Fusion Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/local/style.css" />
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
@@ -45,6 +48,20 @@
       <div class="topbar-title">
         <h1>Panoramica Casa</h1>
         <p>Controllo intelligente e panoramica rapida degli ambienti.</p>
+      </div>
+      <div class="topbar-meta">
+        <div class="status-chip">
+          <span class="status-dot status-dot--small" data-topbar-dot></span>
+          <span id="topbar-connection">Offline</span>
+        </div>
+        <div class="status-chip">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span id="topbar-date">--</span>
+        </div>
+        <div class="status-chip status-chip--highlight">
+          <i data-lucide="clock-3" class="w-4 h-4"></i>
+          <span id="topbar-time">--:--</span>
+        </div>
       </div>
       <div class="topbar-actions">
         <button class="icon-btn" onclick="location.reload()" title="Aggiorna">
