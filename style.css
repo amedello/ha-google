@@ -307,6 +307,7 @@ main {
   pointer-events: none;
   transition: opacity 0.2s ease;
   z-index: 40;
+  z-index: 20;
   backdrop-filter: blur(6px);
 }
 
