@@ -223,6 +223,7 @@ function renderCurrentView() {
     
     lucide.createIcons();
     document.body.classList.toggle('edit-mode', isEditMode);
+    document.body.classList.toggle('view-mode', !isEditMode);
     Object.values(entities).forEach(entity => updateEntityUI(entity));
     startClock();
 }
